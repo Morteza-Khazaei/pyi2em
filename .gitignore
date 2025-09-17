@@ -165,7 +165,7 @@ cython_debug/
 
 # Drop data
 # Ignore downloaded data folders from the CLI
-data/
+# data/
 datasets/
 
 # Local editor/IDE settings
