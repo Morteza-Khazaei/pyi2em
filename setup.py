@@ -124,8 +124,8 @@ def _read_requirements():
 setup(
     name='pyi2em',
     version='0.0.1',
-    author='Nick Steiner',
-    author_email='nick.steiner@gmail.com',
+    author='Morteza Khazaei',
+    author_email='mortezakhazaei1370@gmail.com',
     description='A I2EM library using pybind11 and CMake',
     long_description='',
     ext_modules=[CMakeExtension('pyi2em')],
