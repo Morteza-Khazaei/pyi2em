@@ -39,6 +39,11 @@ void IEMX_model(float freq_ghz, float rmsheight, float correl_length,
                 double thi, cdouble er, 
                 int correl_func, float xcoeff, int auto_select, double *sigma0_hv);
 
+// Cross-pol (IEMX) tuning knobs
+void set_xpol_integrator(int maxeval, double reltol, double abstol);
+void set_xpol_auto_eps(double eps);
+void set_xpol_vh_scale(double scale_power);
+
 
 void roughness_spectrum(int correl_func, float xx, double wvnb, double sig, 
                         double L, int Ts, double *wn, double *rss);

@@ -12,6 +12,27 @@
 
 using namespace std;
 
+// Cross-pol tuning knobs (defaults)
+static int g_xpol_maxeval = 10000;
+static double g_xpol_reltol = 1e-6;
+static double g_xpol_abstol = 0.0;
+static double g_xpol_auto_eps = 1.0e-8;
+static double g_xpol_vh_scale = 1.0; // power-domain scale factor for VH
+
+void set_xpol_integrator(int maxeval, double reltol, double abstol) {
+  if (maxeval > 0) g_xpol_maxeval = maxeval;
+  if (reltol > 0.0) g_xpol_reltol = reltol;
+  if (abstol >= 0.0) g_xpol_abstol = abstol;
+}
+
+void set_xpol_auto_eps(double eps) {
+  if (eps > 0.0) g_xpol_auto_eps = eps;
+}
+
+void set_xpol_vh_scale(double scale_power) {
+  if (scale_power > 0.0) g_xpol_vh_scale = scale_power;
+}
+
 //*********************************************************************************
 void parse_data(char *data, float *real_eps1, float *imag_eps1,
                 float *real_eps2, float *imag_eps2,
@@ -843,7 +864,7 @@ void IEMX_model(float freq_ghz, float rmsheight, float correl_length,
   } else {
    n_spec = 1; 
    scale =1.;
-   while (error > 1.0e-8) {
+   while (error > g_xpol_auto_eps) {
     n_spec++;
     scale = scale/n_spec;
     error = pow(ks2 *4.*cs*cs , n_spec) * scale;  // was: ./ factorial(n_spec); 
@@ -864,8 +885,7 @@ void IEMX_model(float freq_ghz, float rmsheight, float correl_length,
   //svh = dblquad(@(r,phi)xpol_integralfunc(r, phi, sp,xx, ks2, cs,s, kl2, L, er, rss, rvh, n_spec), 0.1, 1, 0, pi);
 
   //printf("svh=%f\n",svh);
-
-  *sigma0_vh = 10.*log10(fabs(svh* Shdw));
+  *sigma0_vh = 10.*log10(fabs(svh * g_xpol_vh_scale * Shdw));
 
 }
 
@@ -899,10 +919,14 @@ void integrate_xpol(int sp, double xx, double ks2, double cs, double s, double k
   xmin[1]=0.0;
   xmax[1]=PI;
 
+  // Cross-pol integral with configurable accuracy
   pcubature(1, xpol_integrand, params,
-            2, xmin, xmax, 1000, 0., 1.e-3,
+            2, xmin, xmax, g_xpol_maxeval, g_xpol_abstol, g_xpol_reltol,
             ERROR_L2, val, err);
 
+  // The MATLAB version scales the integrand by 1e5 and rescales afterward.
+  // Our integrand returns the unscaled value, so no rescale needed. If future
+  // stability issues arise, consider adding explicit scaling in xpol_integrand.
   *svh = val[0];
 }
 
@@ -940,18 +964,16 @@ int xpol_integrand(unsigned ndim, const double *x, void *params,
 
 
 
-  sp = ((double *)params)[0];
-  xx  = ((double *)params)[1];
+  sp   = ((double *)params)[0];
+  xx   = ((double *)params)[1];
   ks2  = ((double *)params)[2];
-  cs  = ((double *)params)[3];
-  s  = ((double *)params)[4];
+  cs   = ((double *)params)[3];
+  s    = ((double *)params)[4];
   kl2  = ((double *)params)[5];
-  L  = ((double *)params)[6];
-  //er = ((double *)params)[7] + (((double *)params)[8])*I;
-  cdouble er (((double *)params)[2],  (((double *)params)[3]));
+  L    = ((double *)params)[6];
+  cdouble er (((double *)params)[7],  (((double *)params)[8]));
   rss  = ((double *)params)[9];
-  //rvh = ((double *)params)[10] + (((double *)params)[11])*I;
-  cdouble rvh (((double *)params)[10],  (((double *)params)[11]));
+  cdouble rvh (((double *)params)[10], (((double *)params)[11]));
   n_spec = (int) (((double *)params)[12]);
 
 
