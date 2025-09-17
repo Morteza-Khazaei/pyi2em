@@ -776,7 +776,7 @@ double x_exponential_spectrum(double z, void *params)
   xx   = ((double *)params)[3];
   
   
-  return exp(pow(-fabs(z),xx)) * gsl_sf_bessel_j0(z*wvnb*L/pow(n,1./xx) ) *z;
+  return exp(-pow(fabs(z),xx)) * gsl_sf_bessel_j0(z*wvnb*L/pow(n,1./xx) ) *z;
 }
 
 
